@@ -3,11 +3,12 @@ var moment = require('moment');
 var axios = require("axios");
 var Spotify = require('node-spotify-api');
 var keys = require("./keys");
-var userCommand = process.argv[2];
 // var userSearchInput = process.argv;
 
 // take in input to determine which function to call
 function liriInput() {
+    var userCommand = process.argv[2];
+
     if (userCommand === "spotify-this-song") {
         searchSpotify();
     } else if (userCommand === "concert-this") {
@@ -72,63 +73,107 @@ function searchBandsInTown() {
     for (var i = 3; i < bandArray.length; i++) {
 
         if (i > 3 && i < bandArray.length) {
-          bandName = bandName + "+" + bandArray[i];
+            bandName = bandName + "+" + bandArray[i];
         }
         else {
-          bandName += bandArray[i];
+            bandName += bandArray[i];
         }
     }
     var queryUrl = "https://rest.bandsintown.com/artists/" + bandName + "/events?app_id=codingbootcamp"
 
-    axios.get(queryUrl).then (
-        function(response) {
+    axios.get(queryUrl).then(
+        function (response) {
+            var importedDataTime = response.data[0].datetime;
+            var timeConverted = moment(importedDataTime).format('MMMM Do YYYY, h:mm:ss a');
+
             console.log("\n----------------------------------------------------------------------------------------- \n");
             console.log("See " + response.data[0].lineup + " at: ");
             console.log("Venue Name: " + response.data[0].venue.name);
             console.log("Venue Location: " + response.data[0].venue.city + ", " + response.data[0].venue.region + ", " + response.data[0].venue.country);
-            console.log("Event Date: " + response.data[0].datetime);
+            console.log("Event Date Converted: " + timeConverted);
             console.log("\n----------------------------------------------------------------------------------------- \n");
-
         }
     )
 }
 
 
 //OMDB SECTION
-function searchOMDB () {
+function searchOMDB() {
     var movieName = "";
     var movieArray = process.argv;
 
     for (var i = 3; i < movieArray.length; i++) {
 
         if (i > 3 && i < movieArray.length) {
-          movieName = movieName + "+" + movieArray[i];
+            movieName = movieName + "+" + movieArray[i];
         }
         else {
-          movieName += movieArray[i];
+            movieName += movieArray[i];
         }
     }
 
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
 
     axios.get(queryUrl).then(
-        function(response) {
+        function (response) {
             console.log("\n----------------------------------------------------------------------------------------- \n");
             console.log("Title: " + response.data.Title);
             console.log("Release Year: " + response.data.Year);
             console.log("IMDB Rating: " + response.data.Ratings[0].Value);
             console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
-            console.log("Country Produced: "+ response.data.Country);
+            console.log("Country Produced: " + response.data.Country);
             console.log("Language: " + response.data.Language);
             console.log("Plot: " + response.data.Plot);
-            console.log ("\n");
+            console.log("\n");
             console.log("Actors: " + response.data.Actors);
             console.log("\n----------------------------------------------------------------------------------------- \n");
         }
     );
 }
 
+// CALL TO TEXT FILE SECTION
+function searchRandomTXT() {
+    var fs = require("fs");
+    var recallOperation = process.argv;
+
+    //create a new file and add "spotify-this-song, I Want it That Way"
+    fs.writeFile("log.txt", "spotify-this-song, I Want it That Way", function(err) {
+        if (err) {
+            return console.log(err);
+        }
+    });
+
+    fs.readFile("log.txt", "utf8", function(error, data) {
+        var readOperator = data.split(", ")[0];
+        var readValue = data.split(", ")[1];
+
+        console.log("read Operator: " + readOperator);
+        console.log("read Value: " + readValue);
+
+        if (error) {
+            return console.log(error);
+        }
+
+        function rinseAndRepeat() {
+            if (readOperator === "spotify-this-song") {
+                searchSpotify();
+            } else if (readOperator === "concert-this") {
+                searchBandsInTown();
+            } else if (readOperator === "movie-this") {
+                searchOMDB();
+            } else if (readOperator === "do-what-it-says") {
+                searchRandomTXT();
+            } else {
+                console.log("Not a valid command, please use on of the following commands: \nspotify-this-song \nconcert-this \nmovie-this \ndo-what-it-says");
+            }
+        }
+    
+    rinseAndRepeat();
+
+    });
+
+    
+
+}
+
 liriInput();
-// moment().format();
-
-
