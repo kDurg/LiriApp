@@ -3,7 +3,8 @@ var moment = require('moment');
 var axios = require("axios");
 var Spotify = require('node-spotify-api');
 var keys = require("./keys");
-// var userSearchInput = process.argv;
+
+//Make global 
 
 // take in input to determine which function to call
 function liriInput() {
@@ -156,13 +157,58 @@ function searchRandomTXT() {
 
         function rinseAndRepeat() {
             if (readOperator === "spotify-this-song") {
-                searchSpotify();
+                function Spotify() {
+                    spotify.search({ type: 'track', query: readValue }, function (err, data) {
+                        if (err) {
+                            return console.log('Error occurred: ' + err);
+                        }
+            
+                        console.log("\n----------------------------------------------------------------------------------------- \n");
+                        console.log("Artist(s): " + data.tracks.items[0].album.artists[0].name);
+                        console.log("Song Title: " + data.tracks.items[0].name);
+                        console.log("Song Preview Link: " + data.tracks.items[0].preview_url);
+                        console.log("Album: " + data.tracks.items[0].album.name);
+                        console.log("\n----------------------------------------------------------------------------------------- \n");
+                    });
+                }
             } else if (readOperator === "concert-this") {
-                searchBandsInTown();
+                function BandsInTown() {
+                    var queryUrl = "https://rest.bandsintown.com/artists/" + readValue + "/events?app_id=codingbootcamp"
+                    axios.get(queryUrl).then(
+                        function (response) {
+                            var importedDataTime = response.data[0].datetime;
+                            var timeConverted = moment(importedDataTime).format('MMMM Do YYYY, h:mm:ss a');
+                            console.log("\n----------------------------------------------------------------------------------------- \n");
+                            console.log("See " + response.data[0].lineup + " at: ");
+                            console.log("Venue Name: " + response.data[0].venue.name);
+                            console.log("Venue Location: " + response.data[0].venue.city + ", " + response.data[0].venue.region + ", " + response.data[0].venue.country);
+                            console.log("Event Date Converted: " + timeConverted);
+                            console.log("\n----------------------------------------------------------------------------------------- \n");
+                        }
+                    )
+                }
+
             } else if (readOperator === "movie-this") {
-                searchOMDB();
+                function OMDB() {
+                    var queryUrl = "http://www.omdbapi.com/?t=" + readValue + "&y=&plot=short&apikey=trilogy";
+                    axios.get(queryUrl).then(
+                        function (response) {
+                            console.log("\n----------------------------------------------------------------------------------------- \n");
+                            console.log("Title: " + response.data.Title);
+                            console.log("Release Year: " + response.data.Year);
+                            console.log("IMDB Rating: " + response.data.Ratings[0].Value);
+                            console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
+                            console.log("Country Produced: " + response.data.Country);
+                            console.log("Language: " + response.data.Language);
+                            console.log("Plot: " + response.data.Plot);
+                            console.log("\n");
+                            console.log("Actors: " + response.data.Actors);
+                            console.log("\n----------------------------------------------------------------------------------------- \n");
+                        }
+                    );
+                }
             } else if (readOperator === "do-what-it-says") {
-                searchRandomTXT();
+                console.log("Give me a break, choose something else");
             } else {
                 console.log("Not a valid command, please use on of the following commands: \nspotify-this-song \nconcert-this \nmovie-this \ndo-what-it-says");
             }
